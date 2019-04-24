@@ -1,46 +1,39 @@
 "use strict";
 
-// noisetrade does this... not sure if we should or not
 // $('video').first().bind('playing pause', Connector.onStateChanged);
 
-let useScreenText = true;
-let useMediaElement = false;
-let useSliderPositions = false;
-
-let mediaElement = document.querySelector('video');
-
 // '[id*="ControlsContainer"]'
-let musicSelector = "#musicControlsContainer";
-let audiobookSelector = "#audiobookControlsContainer";
-let currentPlayerSelector = `${audiobookSelector}`;
+const musicSelector = "#musicControlsContainer";
+const audiobookSelector = "#audiobookControlsContainer";
 
-let isMusic = !!$(`${currentPlayerSelector}`).length;
-let isAudiobook = !!$(`${currentPlayerSelector}`).length;
+const getPlayerWrapper = () => $(`${musicSelector}, ${audiobookSelector}`);
+const getCurrentPlayerSlider = () => getPlayerWrapper().find('[role="slider"]:eq(1)');
+const isMusicPlayer = () => !!$(`${musicSelector}`).length;
 
-Connector.playerSelector = `${currentPlayerSelector}`;
-Connector.isPlaying = () => !!$('button[aria-label="Pause"]').length;
-Connector.trackArtSelector = `${Connector.playerSelector} div[role="main"] img`;
+const musicControlsChild = '._2jUesww3ZWJuIQecXKG0nX';
 
-if (isAudiobook) {
+const musicMetaWrap = '._2cWWrzqjTPrsKdttqGRQCJ';
+const audiobookMetaWrap = '._2OWZqLIjt4iVi6S6YV69RM';
+const trackWrap = 'div:first-child';
+const albumArtistWrap = 'div:last-child';
 
-  Connector.artistSelector = `${Connector.playerSelector} ._2OWZqLIjt4iVi6S6YV69RM > div:last-child`;
-  Connector.trackSelector = `${Connector.playerSelector} ._2OWZqLIjt4iVi6S6YV69RM > div:first-child`;
-  Connector.albumSelector = `${Connector.trackSelector}`;
-  Connector.getArtist = () => {
-    let imgAlt = $(`${Connector.trackArtSelector}`).attr('alt');
-    return imgAlt.split(' by ')[0];
-	};
+const getMusicArtist = () => Util.splitArtistTrack(getPlayerWrapper().find(`${musicMetaWrap} > ${albumArtistWrap}`).text()).track;
+const getAudiobookArtist = () => getPlayerWrapper().find(`${audiobookMetaWrap} > ${albumArtistWrap}`).text();
 
-  if (useScreenText) {
-    Connector.currentTimeSelector = `${Connector.playerSelector} [role="slider"]:eq(1) + div > span:first-child`;
-    Connector.durationSelector = `${Connector.playerSelector} [role="slider"]:eq(1) + div > span:last-child`;
-  } else if (useSliderPositions) {
-    Connector.getCurrentTime = () => $(`${Connector.playerSelector} [role="slider"]:eq(1)`).attr('aria-valuenow');
-    Connector.getDuration = () => $(`${Connector.playerSelector} [role="slider"]:eq(1)`).attr('aria-valuemax');
-  } else if (useMediaElement) {
-    Connector.getCurrentTime = () => mediaElement.currentTime;
-    Connector.getDuration = () => mediaElement.duration;
-    Connector.isPlaying = () => !mediaElement.paused;
-  }
+const getMusicTrack = () => getPlayerWrapper().find(`${musicMetaWrap} > ${trackWrap}`).text();
+const getAudiobookTrack = () => getPlayerWrapper().find(`${audiobookMetaWrap} > ${trackWrap}`).text();
 
-}
+const getMusicAlbum = () => Util.splitArtistTrack(getPlayerWrapper().find(`${musicMetaWrap} > ${albumArtistWrap}`).text()).artist;
+const getAudiobookAlbum = () => getPlayerWrapper().find(`${audiobookMetaWrap} > ${trackWrap}`).text();
+
+Connector.playerSelector = '#app > div > div > div > div[data-radium="true"]:not(#update-modal)';
+
+Connector.getArtist = () => isMusicPlayer() ? getMusicArtist() : getAudiobookArtist();
+Connector.getTrack = () => isMusicPlayer() ? getMusicTrack() : getAudiobookTrack();
+Connector.getAlbum = () => isMusicPlayer() ? getMusicAlbum() : getAudiobookAlbum();
+Connector.getTrackArt = () => getPlayerWrapper().find('div[role="main"] img').attr('src');
+
+Connector.getDuration = () => getCurrentPlayerSlider().find('input').attr('max');
+Connector.getCurrentTime = () => getCurrentPlayerSlider().find('input').attr('value');
+Connector.isPlaying = () => !$('button[aria-label="Pause"]').length;
+Connector.getUniqueID = () => Connector.getTrackArt().split('.net/').slice(-1)[0]+`_${Connector.getTrack()}`+"_dev123";
