@@ -55,6 +55,12 @@ define(function() {
 	},
 
 	{
+		label: 'hoopladigital',
+		matches: ['*://hoopladigital.com/*', '*://www.hoopladigital.com/*'],
+		js: ['connectors/hoopladigital.js'],
+	},
+
+	{
 		label: 'Bandcamp',
 		matches: ['*://*.bandcamp.com/*', '*://bandcamp.com/*'],
 		js: ['connectors/bandcamp.js'],
