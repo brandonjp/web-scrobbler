@@ -35,5 +35,5 @@ Connector.getTrackArt = () => getPlayerWrapper().find('div[role="main"] img').at
 
 Connector.getDuration = () => getCurrentPlayerSlider().find('input').attr('max');
 Connector.getCurrentTime = () => getCurrentPlayerSlider().find('input').attr('value');
-Connector.isPlaying = () => !$('button[aria-label="Pause"]').length;
+Connector.isPlaying = () => !!$('button[aria-label="Pause"]').length;
 Connector.getUniqueID = () => Connector.getTrackArt().split('.net/').slice(-1)[0]+`_${Connector.getTrack()}`+"_dev123";
