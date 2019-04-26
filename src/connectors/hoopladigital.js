@@ -1,39 +1,48 @@
 "use strict";
 
-// $('video').first().bind('playing pause', Connector.onStateChanged);
+// *** for any players *** //
+// div[id*="ControlsContainer"] is the actual player but it gets created/destroyed when switching from audiobook to music that web-scrobbler can't keep a handle on it (*i think)
+// Connector.playerSelector = '#app div[id*="ControlsContainer"]';
+Connector.playerSelector = '#app > div:first-child > div:first-child > div:first-child > div[id*="ControlsContainer"]';
+Connector.playButtonSelector = 'button[aria-label="Play"], button[aria-label="Pause"]';
+Connector.isPlaying = () => !!$('button[aria-label="Pause"]').length;
+Connector.trackArtSelector = `${Connector.playerSelector} div[role="main"] img`;
 
-// '[id*="ControlsContainer"]'
-const musicSelector = "#musicControlsContainer";
-const audiobookSelector = "#audiobookControlsContainer";
+// combining both music and audiobook selectors from the player bar
+const Audiobook_metaWrap = '._2OWZqLIjt4iVi6S6YV69RM'
+const Music_metaWrap = '._2cWWrzqjTPrsKdttqGRQCJ';
+const Audiobook_trackSelector = `${Audiobook_metaWrap} > ._3DF8icl1qNjH9jHEXlOh1X`
+const Music_trackSelector = `${Music_metaWrap} > ._2ssCZ5gIrSlfqAPz7dDm0M`;
+Connector.trackSelector = `${Audiobook_trackSelector}, ${Music_trackSelector}`;
 
-const getPlayerWrapper = () => $(`${musicSelector}, ${audiobookSelector}`);
-const getCurrentPlayerSlider = () => getPlayerWrapper().find('[role="slider"]:eq(1)');
-const isMusicPlayer = () => !!$(`${musicSelector}`).length;
+// on hoopla music tracks when using Utils split, the 'artist' is actually the album & 'track' is artist
+const getAlbumArtistText = () => $(`${Audiobook_metaWrap}, ${Music_metaWrap}`).find('div:last-child').text();
+const getAlbumAristObj = () => {
+  let text = getAlbumArtistText();
+  let splitArray = text.split(' - ');
+  let artist = splitArray.pop();
+  let album = splitArray.join(' - ');
+  return { artist:artist, album:album };
+}
+// TODO: sometimes you'll have an album-artist line such as: "I Told You So - The Ultimate Hits - Randy Travis"
 
-const musicControlsChild = '._2jUesww3ZWJuIQecXKG0nX';
+Connector.getArtist = () => {
+  let text = getAlbumArtistText();
+  let split = getAlbumAristObj();
+  return ((split||{}).album) ? split.artist : text;
+}
 
-const musicMetaWrap = '._2cWWrzqjTPrsKdttqGRQCJ';
-const audiobookMetaWrap = '._2OWZqLIjt4iVi6S6YV69RM';
-const trackWrap = 'div:first-child';
-const albumArtistWrap = 'div:last-child';
+Connector.getAlbum = () => {
+  let text = getAlbumArtistText();
+  let split = getAlbumAristObj();
+  return ((split||{}).album) ? split.album : $(Connector.trackSelector).text();
+}
 
-const getMusicArtist = () => Util.splitArtistTrack(getPlayerWrapper().find(`${musicMetaWrap} > ${albumArtistWrap}`).text()).track;
-const getAudiobookArtist = () => getPlayerWrapper().find(`${audiobookMetaWrap} > ${albumArtistWrap}`).text();
+Connector.getUniqueID = () => {
+  let trackName = $(`${Connector.trackSelector}`).text().trim();
+  return $(`${Connector.trackArtSelector}`).attr('src').split('.net/').slice(-1)[0]+`_${trackName}_dev426`;
+}
 
-const getMusicTrack = () => getPlayerWrapper().find(`${musicMetaWrap} > ${trackWrap}`).text();
-const getAudiobookTrack = () => getPlayerWrapper().find(`${audiobookMetaWrap} > ${trackWrap}`).text();
-
-const getMusicAlbum = () => Util.splitArtistTrack(getPlayerWrapper().find(`${musicMetaWrap} > ${albumArtistWrap}`).text()).artist;
-const getAudiobookAlbum = () => getPlayerWrapper().find(`${audiobookMetaWrap} > ${trackWrap}`).text();
-
-Connector.playerSelector = '#app > div > div > div > div[data-radium="true"]:not(#update-modal)';
-
-Connector.getArtist = () => isMusicPlayer() ? getMusicArtist() : getAudiobookArtist();
-Connector.getTrack = () => isMusicPlayer() ? getMusicTrack() : getAudiobookTrack();
-Connector.getAlbum = () => isMusicPlayer() ? getMusicAlbum() : getAudiobookAlbum();
-Connector.getTrackArt = () => getPlayerWrapper().find('div[role="main"] img').attr('src');
-
-Connector.getDuration = () => getCurrentPlayerSlider().find('input').attr('max');
-Connector.getCurrentTime = () => getCurrentPlayerSlider().find('input').attr('value');
-Connector.isPlaying = () => !$('button[aria-label="Pause"]').length;
-Connector.getUniqueID = () => Connector.getTrackArt().split('.net/').slice(-1)[0]+`_${Connector.getTrack()}`+"_dev123";
+const $playerSlider = $('#app > div > div > div:first-child > div[id*="ControlsContainer"] > div > div:last-child div[role="slider"]');
+Connector.getDuration = () => $playerSlider.attr('aria-valuemax');
+Connector.getCurrentTime = () => $playerSlider.attr('aria-valuenow');
