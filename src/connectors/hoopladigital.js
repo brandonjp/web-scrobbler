@@ -1,5 +1,3 @@
-"use strict";
-
 // *** for any players *** //
 // div[id*="ControlsContainer"] is the actual player but it gets created/destroyed when switching from audiobook to music that web-scrobbler can't keep a handle on it (*i think)
 // Connector.playerSelector = '#app div[id*="ControlsContainer"]';
@@ -24,7 +22,6 @@ const getAlbumAristObj = () => {
   let album = splitArray.join(' - ');
   return { artist:artist, album:album };
 }
-// TODO: sometimes you'll have an album-artist line such as: "I Told You So - The Ultimate Hits - Randy Travis"
 
 Connector.getArtist = () => {
   let text = getAlbumArtistText();
